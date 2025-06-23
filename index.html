@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>WFW Linkchecker</title>
   <style>
     body {
@@ -14,23 +13,25 @@
     }
     .logo {
       text-align: center;
-      margin-top: 40px;
+      margin-top: 30px;
     }
     .logo img {
-      width: 120px;
+      width: 100px;
+      max-width: 30vw;
     }
     .content-box {
       background: white;
       max-width: 700px;
       margin: 30px auto;
-      padding: 30px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
     h1 {
       text-align: center;
       color: #007acc;
-      font-size: 1.8rem;
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      margin-bottom: 1rem;
     }
     p {
       font-size: 1rem;
@@ -38,11 +39,12 @@
     }
     input, button {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.9rem;
       font-size: 1rem;
       margin-top: 1rem;
       border-radius: 6px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     button {
       background: #007acc;
@@ -63,8 +65,9 @@
       text-align: center;
       color: white;
       text-decoration: none;
-      margin: 40px auto 20px;
+      margin: 30px auto 20px;
       font-weight: bold;
+      font-size: 1rem;
     }
   </style>
 </head>
