@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WFW Linkchecker</title>
   <style>
     body {
@@ -18,6 +19,19 @@
     .logo img {
       width: 100px;
       max-width: 30vw;
+    }
+    .lang-switch {
+      text-align: center;
+      margin: 10px;
+    }
+    .lang-switch button {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      color: white;
+      cursor: pointer;
+      margin: 0 5px;
+      text-decoration: underline;
     }
     .content-box {
       background: white;
@@ -46,13 +60,13 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-    button {
+    button.check {
       background: #007acc;
       color: white;
       border: none;
       cursor: pointer;
     }
-    .output {
+    .output, .explanation {
       margin-top: 1.5rem;
       padding: 1rem;
       border-radius: 6px;
@@ -69,6 +83,25 @@
       font-weight: bold;
       font-size: 1rem;
     }
+    .mobile-only {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .mobile-only {
+        display: block;
+        margin-top: 10px;
+        text-align: center;
+      }
+      .mobile-only button {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        background: #007acc;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+    }
   </style>
 </head>
 <body>
@@ -77,22 +110,70 @@
     <img src="WFW.jpg" alt="WFW Logo">
   </div>
 
+  <div class="lang-switch">
+    <button onclick="setLang('de')">🇩🇪 Deutsch</button> |
+    <button onclick="setLang('en')">🇬🇧 English</button>
+  </div>
+
   <div class="content-box">
-    <h1>🔍 Link-Checker – Phishing erkennen</h1>
-    <p>Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:</p>
+    <h1 id="title">🔍 Link-Checker – Phishing erkennen</h1>
+    <p id="desc">Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:</p>
     <input type="text" id="urlInput" placeholder="https://example.com">
-    <button onclick="checkUrl()">Prüfen</button>
+    <button class="check" onclick="checkUrl()" id="checkBtn">Prüfen</button>
+
+    <div class="mobile-only">
+      <button onclick="alert('QR-Code-Scanner folgt in Version 2 😉')">📷 QR-Code scannen</button>
+    </div>
+
     <div id="result" class="output"></div>
+    <div id="explanation" class="explanation"></div>
+
+    <div style="margin-top: 1.5rem; text-align: center;">
+      <a href="https://w-f-w.at/hilfe-nach-klick" target="_blank" style="color: #007acc; font-weight: bold;">❓ Was tun, wenn ich draufgeklickt habe?</a>
+    </div>
   </div>
 
   <a href="https://w-f-w.at" class="footer-link">🏠 Zurück zur Startseite</a>
 
   <script>
+    const texts = {
+      de: {
+        title: "🔍 Link-Checker – Phishing erkennen",
+        desc: "Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:",
+        checkBtn: "Prüfen",
+        explanation: {
+          green: "✅ Der Link scheint sicher zu sein.",
+          yellow: "⚠️ Der Link sieht verdächtig aus. Bitte vorsichtig sein!",
+          red: "🚫 Achtung! Dieser Link ist gefährlich oder bekannt als Betrug."
+        }
+      },
+      en: {
+        title: "🔍 Link Checker – Detect Phishing",
+        desc: "Check if a link is dangerous or suspicious – anonymous & free:",
+        checkBtn: "Check",
+        explanation: {
+          green: "✅ The link appears to be safe.",
+          yellow: "⚠️ The link looks suspicious. Be cautious!",
+          red: "🚫 Warning! This link is dangerous or known for fraud."
+        }
+      }
+    };
+    let currentLang = 'de';
+    function setLang(lang) {
+      currentLang = lang;
+      document.getElementById('title').innerText = texts[lang].title;
+      document.getElementById('desc').innerText = texts[lang].desc;
+      document.getElementById('checkBtn').innerText = texts[lang].checkBtn;
+    }
+
     async function checkUrl() {
       const url = document.getElementById("urlInput").value;
       const resultDiv = document.getElementById("result");
+      const explanation = document.getElementById("explanation");
       resultDiv.innerHTML = "⏳ Wird geprüft...";
       resultDiv.className = "output";
+      explanation.innerHTML = "";
+      explanation.className = "explanation";
 
       const apiKey = "AIzaSyA0HyrC4HxtnXd11ZkJvxPVT3Q-qAdHsDQ";
       const endpoint = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
@@ -111,11 +192,11 @@
       try {
         const parsedUrl = new URL(url.includes("://") ? url : "http://" + url);
         const host = parsedUrl.hostname;
-        if (url.includes("@")) heuristics.push("⚠️ Die URL enthält ein '@' – Spoofing-Verdacht.");
+        if (url.includes("@")) heuristics.push("⚠️ Die URL enthält ein '@'.");
         if ([".cc", ".tk", ".ml", ".gq", ".xyz", ".top"].some(tld => host.endsWith(tld)))
           heuristics.push("⚠️ Verdächtige Domainendung.");
         if (host.length < 10 || host.includes("android"))
-          heuristics.push("⚠️ Ungewöhnlich kurze oder technisch klingende Domain.");
+          heuristics.push("⚠️ Sehr kurze oder technisch aussehende Domain.");
       } catch {
         heuristics.push("⚠️ Ungültige URL – bitte überprüfen.");
       }
@@ -130,14 +211,17 @@
         });
         const data = await res.json();
         if (data && data.matches) {
-          resultDiv.innerHTML = `<strong>🚫 Gefährlich:</strong> Die Seite ist als Bedrohung gemeldet.<ul>${heuristicWarnings}</ul>`;
+          resultDiv.innerHTML = texts[currentLang].explanation.red;
           resultDiv.classList.add("danger");
         } else if (heuristics.length > 0) {
-          resultDiv.innerHTML = `<strong>⚠️ Verdächtig:</strong> Keine Google-Warnung, aber Anzeichen für Phishing.<ul>${heuristicWarnings}</ul>`;
+          resultDiv.innerHTML = texts[currentLang].explanation.yellow;
           resultDiv.classList.add("warning");
         } else {
-          resultDiv.innerHTML = "✅ Die URL scheint sicher zu sein.";
+          resultDiv.innerHTML = texts[currentLang].explanation.green;
           resultDiv.classList.add("safe");
+        }
+        if (heuristicWarnings) {
+          explanation.innerHTML = "<ul>" + heuristicWarnings + "</ul>";
         }
       } catch {
         resultDiv.innerHTML = "❌ Fehler bei der API-Anfrage.";
