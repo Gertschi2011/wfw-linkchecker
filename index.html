@@ -170,10 +170,13 @@ function startQR() {
     });
   }, console.warn);
 
-  // Scroll zu content-Box, nicht nur zum Reader
+ // 📦 Jetzt mit Fenster-Scroll per offsetTop
   setTimeout(() => {
-    document.querySelector(".content-box").scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 500);
+    window.scrollTo({
+      top: readerDiv.offsetTop - 50,
+      behavior: "smooth"
+    });
+  }, 300);
 }
 
 </script>
