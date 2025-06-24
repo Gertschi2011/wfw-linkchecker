@@ -158,6 +158,9 @@ function startQR() {
       checkUrl();
     });
   }, console.warn);
+
+  // 👇 NEU: automatisch zur Kamera scrollen
+  document.getElementById("reader").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 </script>
 </body>
