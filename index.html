@@ -149,19 +149,23 @@ async function checkUrl() {
 }
 
 function startQR() {
-  document.getElementById("reader").style.display = "block";
+  const readerDiv = document.getElementById("reader");
+  readerDiv.style.display = "block";
   const qr = new Html5Qrcode("reader");
   qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
     document.getElementById("urlInput").value = decodedText;
     qr.stop().then(() => {
-      document.getElementById("reader").style.display = "none";
+      readerDiv.style.display = "none";
       checkUrl();
     });
   }, console.warn);
 
-  // 👇 NEU: automatisch zur Kamera scrollen
-  document.getElementById("reader").scrollIntoView({ behavior: "smooth", block: "center" });
+  // ✅ Jetzt mit kleinem Timeout
+  setTimeout(() => {
+    readerDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 300); // 300ms Verzögerung reicht
 }
+
 </script>
 </body>
 </html>
