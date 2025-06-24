@@ -53,8 +53,8 @@
 <body>
 <div class="logo"><img src="WFW.jpg" alt="WFW Logo"></div>
 <div class="lang-switch">
-  <button onclick="setLang('de')">🇩🇪 Deutsch</button>
-  <button onclick="setLang('en')">🇬🇧 English</button>
+  <button onclick="setLang('de')">🇩🇪</button>
+  <button onclick="setLang('en')">🇬🇧</button>
 </div>
 <div class="content-box">
   <h1 id="title">🔍 Link-Checker – Phishing erkennen</h1>
@@ -152,7 +152,9 @@ async function checkUrl() {
     if (url.includes("@")) heuristics.push("⚠️ Die URL enthält ein '@'.");
     if ([".ga", ".tk", ".ml", ".gq", ".xyz", ".top", ".cf"].some(tld => host.endsWith(tld)))
       heuristics.push("⚠️ Verdächtige Domainendung.");
-    if (host.length < 10) heuristics.push("⚠️ Sehr kurzer Domainname.");
+   if (host.length < 10 && !["orf.at", "tu.at", "uni.at"].includes(host)) {
+  heuristics.push("⚠️ Sehr kurzer Domainname.");
+}
     if (["android", "secure", "update", "login"].some(word => host.includes(word)))
       heuristics.push("⚠️ Domain enthält verdächtige Wörter.");
     if (!url.startsWith("https://")) heuristics.push("⚠️ Keine HTTPS-Verbindung.");
