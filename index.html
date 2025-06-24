@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -7,236 +6,159 @@
   <title>WFW Linkchecker</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background-color: #c7008d;
-      color: #333;
-    }
-    .logo {
-      text-align: center;
-      margin-top: 30px;
-    }
-    .logo img {
-      width: 100px;
-      max-width: 30vw;
-    }
-    .lang-switch {
-      text-align: center;
-      margin: 10px;
-    }
-    .lang-switch button {
-      background: none;
-      border: none;
-      font-size: 1rem;
-      color: white;
-      cursor: pointer;
-      margin: 0 5px;
-      text-decoration: underline;
-    }
-    .content-box {
-      background: white;
-      max-width: 700px;
-      margin: 30px auto;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-    h1 {
-      text-align: center;
-      color: #007acc;
-      font-size: clamp(1.4rem, 5vw, 2rem);
-      margin-bottom: 1rem;
-    }
-    p {
-      font-size: 1rem;
-      line-height: 1.6;
-    }
-    input, button {
-      width: 100%;
-      padding: 0.9rem;
-      font-size: 1rem;
-      margin-top: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    button.check {
-      background: #007acc;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    .output, .explanation {
-      margin-top: 1.5rem;
-      padding: 1rem;
-      border-radius: 6px;
-    }
+    body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #c7008d; color: #333; }
+    .logo { text-align: center; margin-top: 30px; }
+    .logo img { width: 100px; max-width: 30vw; }
+    .lang-switch { text-align: center; margin: 10px; }
+    .lang-switch button { background: none; border: none; font-size: 1rem; color: white; cursor: pointer; margin: 0 5px; text-decoration: underline; }
+    .content-box { background: white; max-width: 700px; margin: 30px auto; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+    h1 { text-align: center; color: #007acc; font-size: clamp(1.4rem, 5vw, 2rem); margin-bottom: 1rem; }
+    p { font-size: 1rem; line-height: 1.6; }
+    input, button { width: 100%; padding: 0.9rem; font-size: 1rem; margin-top: 1rem; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+    button.check { background: #007acc; color: white; border: none; cursor: pointer; }
+    .output, .explanation { margin-top: 1.5rem; padding: 1rem; border-radius: 6px; }
     .safe { background: #d4edda; color: #155724; }
     .warning { background: #fff3cd; color: #856404; }
     .danger { background: #f8d7da; color: #721c24; }
-    .footer-link {
-      display: block;
-      text-align: center;
-      color: white;
-      text-decoration: none;
-      margin: 30px auto 20px;
-      font-weight: bold;
-      font-size: 1rem;
-    }
-    .qr-container {
-      display: none;
-      text-align: center;
-      margin-top: 1rem;
-    }
-    #reader {
-      width: 100%;
-      max-width: 400px;
-      margin: auto;
-    }
+    .footer-link { display: block; text-align: center; color: white; text-decoration: none; margin: 30px auto 20px; font-weight: bold; font-size: 1rem; }
+    #reader { width: 100%; max-width: 400px; margin: auto; display: none; }
   </style>
 </head>
 <body>
-
-  <div class="logo">
-    <img src="WFW.jpg" alt="WFW Logo">
+<div class="logo"><img src="WFW.jpg" alt="WFW Logo"></div>
+<div class="lang-switch">
+  <button onclick="setLang('de')">🇩🇪 Deutsch</button> |
+  <button onclick="setLang('en')">🇬🇧 English</button>
+</div>
+<div class="content-box">
+  <h1 id="title">🔍 Link-Checker – Phishing erkennen</h1>
+  <p id="desc">Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:</p>
+  <input type="text" id="urlInput" placeholder="https://example.com">
+  <button class="check" onclick="checkUrl()" id="checkBtn">Prüfen</button>
+  <div style="text-align:center;">
+    <button onclick="startQR()">📷 QR-Code scannen</button>
   </div>
-
-  <div class="lang-switch">
-    <button onclick="setLang('de')">🇩🇪 Deutsch</button>
-    <button onclick="setLang('en')">🇬🇧 English</button>
+  <div id="reader"></div>
+  <div id="result" class="output"></div>
+  <div id="explanation" class="explanation"></div>
+  <div style="margin-top: 1.5rem; text-align: center;">
+    <a href="https://w-f-w.at/hilfe-nach-klick" target="_blank" style="color: #007acc; font-weight: bold;">❓ Was tun, wenn ich draufgeklickt habe?</a>
   </div>
+</div>
+<a href="https://w-f-w.at" class="footer-link">🏠 Zurück zur Startseite</a>
+<script>
+const texts = {
+  de: {
+    title: "🔍 Link-Checker – Phishing erkennen",
+    desc: "Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:",
+    checkBtn: "Prüfen",
+    explanation: {
+      green: "✅ Der Link scheint sicher zu sein.",
+      yellow: "⚠️ Der Link sieht verdächtig aus. Bitte vorsichtig sein!",
+      red: "🚫 Achtung! Dieser Link ist gefährlich oder bekannt als Betrug."
+    }
+  },
+  en: {
+    title: "🔍 Link Checker – Detect Phishing",
+    desc: "Check if a link is dangerous or suspicious – anonymous & free:",
+    checkBtn: "Check",
+    explanation: {
+      green: "✅ The link appears to be safe.",
+      yellow: "⚠️ The link looks suspicious. Be cautious!",
+      red: "🚫 Warning! This link is dangerous or known for fraud."
+    }
+  }
+};
 
-  <div class="content-box">
-    <h1 id="title">🔍 Link-Checker – Phishing erkennen</h1>
-    <p id="desc">Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:</p>
-    <input type="text" id="urlInput" placeholder="https://example.com">
-    <button class="check" onclick="checkUrl()" id="checkBtn">Prüfen</button>
+let currentLang = 'de';
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('title').innerText = texts[lang].title;
+  document.getElementById('desc').innerText = texts[lang].desc;
+  document.getElementById('checkBtn').innerText = texts[lang].checkBtn;
+}
 
-    <div style="text-align:center;">
-      <button onclick="startQR()">📷 QR-Code scannen</button>
-    </div>
+const blacklist = [
+  "banco-internet.ga", "sicher-login.top", "androidlink.cc", "win-promo.xyz", "lotto-gewinnspiel.cc"
+];
 
-    <div id="reader" class="qr-container"></div>
+async function checkUrl() {
+  const url = document.getElementById("urlInput").value;
+  const resultDiv = document.getElementById("result");
+  const explanation = document.getElementById("explanation");
+  resultDiv.innerHTML = "⏳ Wird geprüft...";
+  resultDiv.className = "output";
+  explanation.innerHTML = "";
 
-    <div id="result" class="output"></div>
-    <div id="explanation" class="explanation"></div>
+  try {
+    const parsedUrl = new URL(url.includes("://") ? url : "http://" + url);
+    const host = parsedUrl.hostname;
 
-    <div style="margin-top: 1.5rem; text-align: center;">
-      <a href="https://w-f-w.at/hilfe-nach-dem-klick/" target="_blank" style="color: #007acc; font-weight: bold;">❓ Was tun, wenn ich draufgeklickt habe?</a>
-    </div>
-  </div>
-
-  <a href="https://w-f-w.at" class="footer-link">🏠 Zurück zur Startseite</a>
-
-  <script>
-    const texts = {
-      de: {
-        title: "🔍 Link-Checker – Phishing erkennen",
-        desc: "Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:",
-        checkBtn: "Prüfen",
-        explanation: {
-          green: "✅ Der Link scheint sicher zu sein.",
-          yellow: "⚠️ Der Link sieht verdächtig aus. Bitte vorsichtig sein!",
-          red: "🚫 Achtung! Dieser Link ist gefährlich oder bekannt als Betrug."
-        }
-      },
-      en: {
-        title: "🔍 Link Checker – Detect Phishing",
-        desc: "Check if a link is dangerous or suspicious – anonymous & free:",
-        checkBtn: "Check",
-        explanation: {
-          green: "✅ The link appears to be safe.",
-          yellow: "⚠️ The link looks suspicious. Be cautious!",
-          red: "🚫 Warning! This link is dangerous or known for fraud."
-        }
-      }
-    };
-    let currentLang = 'de';
-    function setLang(lang) {
-      currentLang = lang;
-      document.getElementById('title').innerText = texts[lang].title;
-      document.getElementById('desc').innerText = texts[lang].desc;
-      document.getElementById('checkBtn').innerText = texts[lang].checkBtn;
+    if (blacklist.some(entry => host.includes(entry))) {
+      resultDiv.innerHTML = texts[currentLang].explanation.red;
+      resultDiv.classList.add("danger");
+      return;
     }
 
-    async function checkUrl() {
-      const url = document.getElementById("urlInput").value;
-      const resultDiv = document.getElementById("result");
-      const explanation = document.getElementById("explanation");
-      resultDiv.innerHTML = "⏳ Wird geprüft...";
-      resultDiv.className = "output";
-      explanation.innerHTML = "";
-      explanation.className = "explanation";
-
-      const apiKey = "AIzaSyA0HyrC4HxtnXd11ZkJvxPVT3Q-qAdHsDQ";
-      const endpoint = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
-
-      const body = {
-        client: { clientId: "wfw-checker", clientVersion: "1.0.0" },
+    // Google Safe Browsing API (API-Key anpassen!)
+    const googleResult = await fetch(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=AIzaSyA0HyrC4HxtnXd11ZkJvxPVT3Q-qAdHsDQ`, {
+      method: "POST",
+      body: JSON.stringify({
+        client: { clientId: "wfw-checker", clientVersion: "1.0" },
         threatInfo: {
-          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
+          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING"],
           platformTypes: ["ANY_PLATFORM"],
           threatEntryTypes: ["URL"],
           threatEntries: [{ url }]
         }
-      };
-
-      const heuristics = [];
-      try {
-        const parsedUrl = new URL(url.includes("://") ? url : "http://" + url);
-        const host = parsedUrl.hostname;
-        if (url.includes("@")) heuristics.push("⚠️ Die URL enthält ein '@'.");
-        if ([".cc", ".tk", ".ml", ".gq", ".xyz", ".top"].some(tld => host.endsWith(tld)))
-          heuristics.push("⚠️ Verdächtige Domainendung.");
-        if (host.length < 10 || host.includes("android"))
-          heuristics.push("⚠️ Sehr kurze oder technisch aussehende Domain.");
-      } catch {
-        heuristics.push("⚠️ Ungültige URL – bitte überprüfen.");
-      }
-
-      const heuristicWarnings = heuristics.map(w => `<li>${w}</li>`).join("");
-
-      try {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          body: JSON.stringify(body),
-          headers: { "Content-Type": "application/json" }
-        });
-        const data = await res.json();
-        if (data && data.matches) {
-          resultDiv.innerHTML = texts[currentLang].explanation.red;
-          resultDiv.classList.add("danger");
-        } else if (heuristics.length > 0) {
-          resultDiv.innerHTML = texts[currentLang].explanation.yellow;
-          resultDiv.classList.add("warning");
-        } else {
-          resultDiv.innerHTML = texts[currentLang].explanation.green;
-          resultDiv.classList.add("safe");
-        }
-        if (heuristicWarnings) {
-          explanation.innerHTML = "<ul>" + heuristicWarnings + "</ul>";
-        }
-      } catch {
-        resultDiv.innerHTML = "❌ Fehler bei der API-Anfrage.";
-        resultDiv.classList.add("warning");
-      }
+      }),
+      headers: { "Content-Type": "application/json" }
+    });
+    const threat = await googleResult.json();
+    if (threat.matches) {
+      resultDiv.innerHTML = texts[currentLang].explanation.red;
+      resultDiv.classList.add("danger");
+      return;
     }
 
-    function startQR() {
-      document.getElementById("reader").style.display = "block";
-      const qr = new Html5Qrcode("reader");
-      qr.start({ facingMode: "environment" }, {
-        fps: 10,
-        qrbox: 250
-      }, (decodedText) => {
-        document.getElementById("urlInput").value = decodedText;
-        qr.stop().then(() => {
-          document.getElementById("reader").style.display = "none";
-          checkUrl();
-        });
-      }, console.warn);
+    // Heuristik prüfen
+    const heuristics = [];
+    if (url.includes("@")) heuristics.push("⚠️ Die URL enthält ein '@'.");
+    if ([".ga", ".tk", ".ml", ".gq", ".xyz", ".top", ".cf"].some(tld => host.endsWith(tld)))
+      heuristics.push("⚠️ Verdächtige Domainendung.");
+    if (host.length < 10) heuristics.push("⚠️ Sehr kurzer Domainname.");
+    if (["android", "secure", "update", "login"].some(word => host.includes(word)))
+      heuristics.push("⚠️ Domain enthält verdächtige Wörter.");
+    if (!url.startsWith("https://")) heuristics.push("⚠️ Keine HTTPS-Verbindung.");
+
+    const heuristicWarnings = heuristics.map(w => `<li>${w}</li>`).join("");
+    if (heuristics.length > 0) {
+      resultDiv.innerHTML = texts[currentLang].explanation.yellow;
+      resultDiv.classList.add("warning");
+      explanation.innerHTML = "<ul>" + heuristicWarnings + "</ul>";
+      return;
     }
-  </script>
+
+    resultDiv.innerHTML = texts[currentLang].explanation.green;
+    resultDiv.classList.add("safe");
+
+  } catch {
+    resultDiv.innerHTML = "❌ Ungültige URL.";
+    resultDiv.classList.add("warning");
+  }
+}
+
+function startQR() {
+  document.getElementById("reader").style.display = "block";
+  const qr = new Html5Qrcode("reader");
+  qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
+    document.getElementById("urlInput").value = decodedText;
+    qr.stop().then(() => {
+      document.getElementById("reader").style.display = "none";
+      checkUrl();
+    });
+  }, console.warn);
+}
+</script>
 </body>
 </html>
