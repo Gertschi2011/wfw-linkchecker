@@ -21,7 +21,16 @@
     .warning { background: #fff3cd; color: #856404; }
     .danger { background: #f8d7da; color: #721c24; }
     .footer-link { display: block; text-align: center; color: white; text-decoration: none; margin: 30px auto 20px; font-weight: bold; font-size: 1rem; }
-    #reader { width: 100%; max-width: 400px; margin: auto; display: none; }
+    #reader {
+  width: 100%;
+  max-width: 400px;
+  margin: 30px auto;
+  display: none;
+  min-height: 320px; /* 👈 wichtig für Sichtbarkeit */
+  background-color: #f1f1f1; /* optional: Platzhalter-Hintergrund */
+  border-radius: 10px;
+}
+
   </style>
 </head>
 <body>
@@ -151,6 +160,7 @@ async function checkUrl() {
 function startQR() {
   const readerDiv = document.getElementById("reader");
   readerDiv.style.display = "block";
+
   const qr = new Html5Qrcode("reader");
   qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
     document.getElementById("urlInput").value = decodedText;
@@ -160,10 +170,10 @@ function startQR() {
     });
   }, console.warn);
 
-  // ✅ Jetzt mit kleinem Timeout
+  // Scroll zu content-Box, nicht nur zum Reader
   setTimeout(() => {
-    readerDiv.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 300); // 300ms Verzögerung reicht
+    document.querySelector(".content-box").scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 500);
 }
 
 </script>
