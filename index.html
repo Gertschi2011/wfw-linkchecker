@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WFW Linkchecker</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       margin: 0;
@@ -83,24 +84,15 @@
       font-weight: bold;
       font-size: 1rem;
     }
-    .mobile-only {
+    .qr-container {
       display: none;
+      text-align: center;
+      margin-top: 1rem;
     }
-    @media (max-width: 768px) {
-      .mobile-only {
-        display: block;
-        margin-top: 10px;
-        text-align: center;
-      }
-      .mobile-only button {
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        background: #007acc;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
     }
   </style>
 </head>
@@ -121,9 +113,11 @@
     <input type="text" id="urlInput" placeholder="https://example.com">
     <button class="check" onclick="checkUrl()" id="checkBtn">Prüfen</button>
 
-    <div class="mobile-only">
-      <button onclick="alert('QR-Code-Scanner folgt in Version 2 😉')">📷 QR-Code scannen</button>
+    <div style="text-align:center;">
+      <button onclick="startQR()">📷 QR-Code scannen</button>
     </div>
+
+    <div id="reader" class="qr-container"></div>
 
     <div id="result" class="output"></div>
     <div id="explanation" class="explanation"></div>
@@ -227,6 +221,21 @@
         resultDiv.innerHTML = "❌ Fehler bei der API-Anfrage.";
         resultDiv.classList.add("warning");
       }
+    }
+
+    function startQR() {
+      document.getElementById("reader").style.display = "block";
+      const qr = new Html5Qrcode("reader");
+      qr.start({ facingMode: "environment" }, {
+        fps: 10,
+        qrbox: 250
+      }, (decodedText) => {
+        document.getElementById("urlInput").value = decodedText;
+        qr.stop().then(() => {
+          document.getElementById("reader").style.display = "none";
+          checkUrl();
+        });
+      }, console.warn);
     }
   </script>
 </body>
