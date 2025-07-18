@@ -68,7 +68,8 @@ function openTab(tabId) {
 function checkEmail() {
   const input = document.getElementById("emailInput").value.trim();
   const result = document.getElementById("emailResult");
-  result.innerHTML = ""; // Reset
+  result.className = "output"; // Reset Klassen
+  result.innerHTML = ""; // Reset Inhalt
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const suspiciousTLDs = [".xyz", ".tk", ".top", ".click", ".support"];
@@ -79,21 +80,33 @@ function checkEmail() {
 
   if (!emailRegex.test(input)) {
     result.innerHTML = "❌ Ungültiges E-Mail-Format.";
-    result.style.color = "red";
+    result.classList.add("danger");
     return;
   }
 
   const domain = input.split("@")[1];
   const tld = domain.substring(domain.lastIndexOf("."));
+  const explanations = [];
 
   if (blacklist.includes(domain)) {
-    result.innerHTML = "🔴 Diese E-Mail-Domain ist **hochverdächtig** (Phishing-Muster erkannt).";
-    result.style.color = "red";
-  } else if (suspiciousTLDs.includes(tld)) {
-    result.innerHTML = "🟡 Vorsicht: Diese Domain-Endung ist ungewöhnlich. Bitte genau prüfen.";
-    result.style.color = "orange";
+    result.innerHTML = "🔴 Diese E-Mail-Domain ist <strong>hochverdächtig</strong> (Phishing-Muster erkannt).";
+    result.classList.add("danger");
+    return;
+  }
+
+  if (suspiciousTLDs.includes(tld)) {
+    explanations.push("⚠️ Diese Domainendung ist ungewöhnlich oder oft in Phishing-Adressen verwendet.");
+  }
+
+  if (domain.length < 5 || domain.includes("login") || domain.includes("bank")) {
+    explanations.push("⚠️ Die Domain wirkt technisch oder zu allgemein. Vorsicht!");
+  }
+
+  if (explanations.length > 0) {
+    result.innerHTML = "<strong>⚠️ Verdächtig:</strong><ul><li>" + explanations.join("</li><li>") + "</li></ul>";
+    result.classList.add("warning");
   } else {
-    result.innerHTML = "🟢 Diese E-Mail-Adresse wirkt unauffällig.";
-    result.style.color = "green";
+    result.innerHTML = "✅ Die E-Mail-Adresse sieht unauffällig aus.";
+    result.classList.add("safe");
   }
 }
