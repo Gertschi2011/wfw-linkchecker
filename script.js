@@ -65,7 +65,7 @@ function openTab(tabId) {
   document.querySelector(`.tab-button[onclick="openTab('${tabId}')"]`).classList.add("active");
 }
 
-function checkEmail() {
+async function checkEmail() {
   const input = document.getElementById("emailInput").value.trim();
   const result = document.getElementById("emailResult");
   result.className = "output"; // Reset Klassen
@@ -74,8 +74,10 @@ function checkEmail() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const suspiciousTLDs = [".xyz", ".tk", ".top", ".click", ".support"];
   const blacklist = [
-    "bamf-sicherheit.com", "paypal-konto-check.com",
-    "post-verifikation.net", "sicher-konto-check24.com"
+    "bamf-sicherheit.com", "paypal-konto-check.com", "post-verifikation.net",
+    "sicher-konto-check24.com", "bamf-support.cc", "post-check.tk",
+    "paypal-check.tk", "konto-verifizierung.info", "securelogin.xyz",
+    "amazon-login.click", "banned.de", "fakeemail.org"
   ];
 
   if (!emailRegex.test(input)) {
@@ -88,7 +90,39 @@ function checkEmail() {
   const tld = domain.substring(domain.lastIndexOf("."));
   const explanations = [];
 
-  if (blacklist.includes(domain)) {
+  // Google Safe Browsing Prüfung
+  const apiKey = "AIzaSyA0HyrC4HxtnXd11ZkJvxPVT3Q-qAdHsDQ";
+  const apiUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
+  const threatCheckBody = {
+    client: {
+      clientId: "wfw-emailchecker",
+      clientVersion: "1.0.0"
+    },
+    threatInfo: {
+      threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
+      platformTypes: ["ANY_PLATFORM"],
+      threatEntryTypes: ["URL"],
+      threatEntries: [{ url: "http://" + domain }]
+    }
+  };
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      body: JSON.stringify(threatCheckBody),
+      headers: { "Content-Type": "application/json" }
+    });
+    const data = await res.json();
+    if (data && data.matches) {
+      result.innerHTML = "🔴 Diese E-Mail-Domain wurde von Google als gefährlich gemeldet.";
+      result.classList.add("danger");
+      return;
+    }
+  } catch (e) {
+    explanations.push("⚠️ Google-Prüfung konnte nicht durchgeführt werden.");
+  }
+
+  if (blacklist.some(bad => domain.includes(bad))) {
     result.innerHTML = "🔴 Diese E-Mail-Domain ist <strong>hochverdächtig</strong> (Phishing-Muster erkannt).";
     result.classList.add("danger");
     return;
@@ -100,6 +134,14 @@ function checkEmail() {
 
   if (domain.length < 5 || domain.includes("login") || domain.includes("bank")) {
     explanations.push("⚠️ Die Domain wirkt technisch oder zu allgemein. Vorsicht!");
+  }
+
+  if (domain.match(/(verif|secure|login|konto|support|check)/)) {
+    explanations.push("⚠️ Die Domain enthält verdächtige Begriffe wie 'login', 'secure' oder 'verif'.");
+  }
+
+  if (domain.match(/(gmail\.com|gmx\.de|outlook\.com)$/) && input.toLowerCase().includes("polizei")) {
+    explanations.push("⚠️ Achtung: Behörden wie Polizei verwenden keine kostenlosen E-Mail-Dienste wie Gmail.");
   }
 
   if (explanations.length > 0) {
