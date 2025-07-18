@@ -47,7 +47,28 @@
   background-color: #f1f1f1; /* optional: Platzhalter-Hintergrund */
   border-radius: 10px;
 }
-
+.tabs {
+  display: flex;
+  margin-bottom: 1em;
+}
+.tab-button {
+  flex: 1;
+  padding: 10px;
+  background: #eee;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.tab-button.active {
+  background: #007acc;
+  color: white;
+  font-weight: bold;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
   </style>
 </head>
 <body>
@@ -199,5 +220,28 @@ function startQR() {
 }
 
 </script>
+<div class="tabs">
+  <button class="tab-button active" onclick="openTab('link-tab')">🔗 Link prüfen</button>
+  <button class="tab-button" onclick="openTab('email-tab')">📧 E-Mail prüfen</button>
+</div>
+
+<div id="link-tab" class="tab-content active">
+  <h2>🔗 Link prüfen</h2>
+  <input type="text" id="linkInput" placeholder="z. B. https://example.com">
+  <button onclick="checkLink()">Prüfen</button>
+  <div id="linkResult"></div>
+</div>
+
+<div id="email-tab" class="tab-content">
+  <h2>📧 E-Mail-Adresse prüfen</h2>
+  <input type="text" id="emailInput" placeholder="z. B. hilfe@bamf.de">
+  <button onclick="checkEmail()">Prüfen</button>
+  <div id="emailResult"></div>
+  <div style="margin-top: 1.5rem; text-align: center;">
+    <a href="https://w-f-w.at/hilfe-bei-e-mail-betrug/" target="_blank" style="color: #007acc; font-weight: bold;">
+      ❓ Was tun, wenn ich so eine E-Mail bekommen habe?
+    </a>
+  </div>
+</div>
 </body>
 </html>

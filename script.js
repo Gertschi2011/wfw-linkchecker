@@ -58,3 +58,42 @@ async function checkUrl() {
     resultDiv.classList.add("warning");
   }
 }
+function openTab(tabId) {
+  document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+  document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  document.querySelector(`.tab-button[onclick="openTab('${tabId}')"]`).classList.add("active");
+}
+
+function checkEmail() {
+  const input = document.getElementById("emailInput").value.trim();
+  const result = document.getElementById("emailResult");
+  result.innerHTML = ""; // Reset
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const suspiciousTLDs = [".xyz", ".tk", ".top", ".click", ".support"];
+  const blacklist = [
+    "bamf-sicherheit.com", "paypal-konto-check.com",
+    "post-verifikation.net", "sicher-konto-check24.com"
+  ];
+
+  if (!emailRegex.test(input)) {
+    result.innerHTML = "❌ Ungültiges E-Mail-Format.";
+    result.style.color = "red";
+    return;
+  }
+
+  const domain = input.split("@")[1];
+  const tld = domain.substring(domain.lastIndexOf("."));
+
+  if (blacklist.includes(domain)) {
+    result.innerHTML = "🔴 Diese E-Mail-Domain ist **hochverdächtig** (Phishing-Muster erkannt).";
+    result.style.color = "red";
+  } else if (suspiciousTLDs.includes(tld)) {
+    result.innerHTML = "🟡 Vorsicht: Diese Domain-Endung ist ungewöhnlich. Bitte genau prüfen.";
+    result.style.color = "orange";
+  } else {
+    result.innerHTML = "🟢 Diese E-Mail-Adresse wirkt unauffällig.";
+    result.style.color = "green";
+  }
+}
