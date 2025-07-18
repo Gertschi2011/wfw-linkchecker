@@ -1,4 +1,4 @@
-const cacheName = 'wfw-cache-v1';
+const cacheName = 'wfw-cache-v2';
 const filesToCache = [
   '/',
   '/index.html',
