@@ -83,22 +83,11 @@
   <button class="tab-button active" onclick="switchTab('email')">📧 E-Mail prüfen</button>
   <button class="tab-button" onclick="switchTab('link')">🔗 Link prüfen</button>
 </div>
-<div id="email-tab" class="tab-content content-box">
-  <h2>📧 E-Mail-Adresse prüfen</h2>
-  <input type="text" id="emailInput" placeholder="z. B. hilfe@bamf.de">
-  <button onclick="checkEmail()">Prüfen</button>
-  <div id="emailResult"></div>
-  <div style="margin-top: 1.5rem; text-align: center;">
-    <a href="https://w-f-w.at/hilfe-bei-e-mail-betrug/" target="_blank" style="color: #007acc; font-weight: bold;">
-      ❓ Was tun, wenn ich so eine E-Mail bekommen habe?
-    </a>
-  </div>
-</div>
 <div class="content-box">
   <h1 id="title">🔍 Link-Checker – Phishing erkennen</h1>
   <p id="desc">Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:</p>
-  <input type="text" id="urlInput" placeholder="https://example.com">
-  <button class="check" onclick="checkUrl()" id="checkBtn">Prüfen</button>
+  <input type="text" id="mainInput" placeholder="">
+  <button class="check" onclick="handleCheck()" id="checkBtn">Prüfen</button>
   <div style="text-align:center;">
     <button onclick="startQR()">📷 QR-Code scannen</button>
   </div>
@@ -106,7 +95,9 @@
   <div id="result" class="output"></div>
   <div id="explanation" class="explanation"></div>
   <div style="margin-top: 1.5rem; text-align: center;">
-    <a href="https://w-f-w.at/hilfe-nach-dem-klick/" target="_blank" style="color: #007acc; font-weight: bold;">❓ Was tun, wenn ich draufgeklickt habe?</a>
+    <a id="helpLink" href="https://w-f-w.at/hilfe-nach-dem-klick/" target="_blank" style="color: #007acc; font-weight: bold;">
+      ❓ Was tun, wenn ich draufgeklickt habe?
+    </a>
   </div>
 </div>
 <a href="https://w-f-w.at" class="footer-link">🏠 Zurück zur Startseite</a>
@@ -137,8 +128,10 @@ const texts = {
 let currentLang = 'de';
 function setLang(lang) {
   currentLang = lang;
-  document.getElementById('title').innerText = texts[lang].title;
-  document.getElementById('desc').innerText = texts[lang].desc;
+  if(currentTab === 'link') {
+    document.getElementById('title').innerText = texts[lang].title;
+    document.getElementById('desc').innerText = texts[lang].desc;
+  }
   document.getElementById('checkBtn').innerText = texts[lang].checkBtn;
 }
 
@@ -147,7 +140,7 @@ const blacklist = [
 ];
 
 async function checkUrl() {
-  const url = document.getElementById("urlInput").value;
+  const url = document.getElementById("mainInput").value;
   const resultDiv = document.getElementById("result");
   const explanation = document.getElementById("explanation");
   resultDiv.innerHTML = "⏳ Wird geprüft...";
@@ -214,13 +207,49 @@ async function checkUrl() {
   }
 }
 
+function checkEmail() {
+  const email = document.getElementById("mainInput").value;
+  const resultDiv = document.getElementById("result");
+  const explanation = document.getElementById("explanation");
+  resultDiv.innerHTML = "";
+  explanation.innerHTML = "";
+
+  // Sehr einfache Prüfung auf gültiges E-Mail-Format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    resultDiv.innerHTML = "❌ Ungültige E-Mail-Adresse.";
+    resultDiv.className = "output warning";
+    return;
+  }
+
+  // Beispielhafte einfache Blacklist
+  const suspiciousDomains = ["spam.com", "fakeemail.org", "banned.de"];
+  const domain = email.split("@")[1].toLowerCase();
+
+  if (suspiciousDomains.includes(domain)) {
+    resultDiv.innerHTML = "🚫 Verdächtige E-Mail-Domain erkannt!";
+    resultDiv.className = "output danger";
+  } else {
+    resultDiv.innerHTML = "✅ Die E-Mail-Adresse sieht unverdächtig aus.";
+    resultDiv.className = "output safe";
+  }
+}
+
+function handleCheck() {
+  if(currentTab === 'email') {
+    checkEmail();
+  } else {
+    checkUrl();
+  }
+}
+
 function startQR() {
   const readerDiv = document.getElementById("reader");
   readerDiv.style.display = "block";
 
   const qr = new Html5Qrcode("reader");
   qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
-    document.getElementById("urlInput").value = decodedText;
+    document.getElementById("mainInput").value = decodedText;
     qr.stop().then(() => {
       readerDiv.style.display = "none";
       checkUrl();
@@ -236,22 +265,40 @@ function startQR() {
   }, 300);
 }
 
+let currentTab = 'email';
 function switchTab(tab) {
-  const emailTab = document.getElementById("email-tab");
-  const linkTab = document.getElementById("link-tab");
-  const buttons = document.querySelectorAll(".tab-button");
+  currentTab = tab;
+  const title = document.getElementById("title");
+  const desc = document.getElementById("desc");
+  const input = document.getElementById("mainInput");
+  const checkBtn = document.getElementById("checkBtn");
+  const explanation = document.getElementById("explanation");
+  const result = document.getElementById("result");
+  const helpLinks = {
+    email: "https://w-f-w.at/hilfe-bei-e-mail-betrug/",
+    link: "https://w-f-w.at/hilfe-nach-dem-klick/"
+  };
 
-  buttons.forEach(btn => btn.classList.remove("active"));
-
+  document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
   if (tab === 'email') {
-    emailTab.style.display = 'block';
-    linkTab.style.display = 'none';
-    buttons[0].classList.add("active");
+    title.innerText = "📧 E-Mail-Adresse prüfen";
+    desc.innerText = "Prüfe hier anonym & sicher, ob eine E-Mail-Adresse verdächtig ist:";
+    input.placeholder = "z. B. hilfe@bamf.de";
+    checkBtn.setAttribute("onclick", "checkEmail()");
+    document.querySelector(".tab-button:nth-child(1)").classList.add("active");
   } else {
-    emailTab.style.display = 'none';
-    linkTab.style.display = 'block';
-    buttons[1].classList.add("active");
+    title.innerText = texts[currentLang].title;
+    desc.innerText = texts[currentLang].desc;
+    input.placeholder = "https://example.com";
+    checkBtn.setAttribute("onclick", "checkUrl()");
+    document.querySelector(".tab-button:nth-child(2)").classList.add("active");
   }
+
+  result.innerHTML = "";
+  result.className = "output";
+  explanation.innerHTML = "";
+
+  document.getElementById("helpLink").href = helpLinks[tab];
 }
 
 // Standard: Nur E-Mail-Tab anzeigen
