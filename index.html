@@ -269,6 +269,78 @@ function checkEmail() {
   }
 }
 
+function checkHeader() {
+  const input = document.getElementById("mainInput").value;
+  const resultDiv = document.getElementById("result");
+  const explanation = document.getElementById("explanation");
+
+  resultDiv.innerHTML = "";
+  explanation.innerHTML = "";
+
+  const warnings = [];
+
+  // Private IPs erkennen
+  if (input.includes("X-Forwarded-For")) {
+    const ipMatches = input.match(/\d{1,3}(?:\.\d{1,3}){3}/g);
+    if (ipMatches) {
+      const privateIPs = ipMatches.filter(ip =>
+        ip.startsWith("10.") ||
+        ip.startsWith("192.168.") ||
+        ip.startsWith("172.16.") ||
+        ip.startsWith("127.")
+      );
+      if (privateIPs.length > 0) {
+        warnings.push("⚠️ Header enthält private IP-Adressen – möglicher Spoofing-Versuch.");
+      }
+    }
+  }
+
+  // Typosquatting erkennen
+  if (input.toLowerCase().includes("paypai.com")) {
+    warnings.push("⚠️ Möglicherweise gefälschte Domain erkannt: 'paypai.com'");
+  }
+
+  // Fake-Googlebot
+  if (input.toLowerCase().includes("googlebot") && !input.includes("66.249.")) {
+    warnings.push("⚠️ Gibt sich als Googlebot aus, aber IP ist nicht von Google.");
+  }
+
+  // Mehrere Received-Header aus verschiedenen Ländern
+  if ((input.match(/Received:/gi) || []).length >= 3 && input.match(/Received: from/g)) {
+    warnings.push("⚠️ Auffällig viele 'Received'-Header – mögliche Verschleierung der Herkunft.");
+  }
+
+  // Suspicious Return-Path
+  if (input.toLowerCase().includes("return-path:") && input.match(/return-path:\s*<.*@.*>/i)) {
+    const returnMatch = input.match(/return-path:\s*<(.*)>/i);
+    if (returnMatch && returnMatch[1].split("@")[1] !== undefined) {
+      const domain = returnMatch[1].split("@")[1].toLowerCase();
+      if (domain.includes("paypal") && !domain.endsWith("paypal.com")) {
+        warnings.push("⚠️ Rücksendeadresse enthält 'paypal', aber stammt nicht von paypal.com.");
+      }
+    }
+  }
+
+  // SPF Fail
+  if (input.toLowerCase().includes("spf=fail")) {
+    warnings.push("🚫 SPF-Überprüfung fehlgeschlagen – möglicher Absender-Spoof.");
+  }
+
+  // X-Mailer als Office Outlook gefälscht
+  if (input.toLowerCase().includes("x-mailer: microsoft outlook") && input.toLowerCase().includes("php")) {
+    warnings.push("⚠️ Header behauptet Outlook, enthält aber Hinweise auf PHP – möglicher Spoof.");
+  }
+
+  if (warnings.length > 0) {
+    resultDiv.innerHTML = "⚠️ Header enthält verdächtige Hinweise.";
+    resultDiv.className = "output warning";
+    explanation.innerHTML = "<ul>" + warnings.map(x => `<li>${x}</li>`).join("") + "</ul>";
+  } else {
+    resultDiv.innerHTML = "✅ Keine Auffälligkeiten im Header erkannt.";
+    resultDiv.className = "output safe";
+  }
+}
+
 function handleCheck() {
   if(currentTab === 'email') {
     checkEmail();
