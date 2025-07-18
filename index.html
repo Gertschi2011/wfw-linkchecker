@@ -396,18 +396,21 @@ function switchTab(tab) {
     title.innerText = "📧 E-Mail-Adresse prüfen";
     desc.innerText = "Prüfe hier anonym & sicher, ob eine E-Mail-Adresse verdächtig ist:";
     input.placeholder = "z. B. hilfe@bamf.de";
+    input.value = "";
     checkBtn.setAttribute("onclick", "checkEmail()");
     document.querySelector(".tab-button:nth-child(1)").classList.add("active");
   } else if (tab === 'header') {
     title.innerText = "🕵️‍♂️ HTTP-Header analysieren";
     desc.innerText = "Füge hier Header-Zeilen (z. B. aus einer E-Mail) ein:";
     input.placeholder = "z. B. X-Forwarded-For: 127.0.0.1, 1.2.3.4";
+    input.value = "";
     checkBtn.setAttribute("onclick", "checkHeader()");
     document.querySelector(".tab-button:nth-child(3)").classList.add("active");
   } else {
     title.innerText = texts[currentLang].title;
     desc.innerText = texts[currentLang].desc;
     input.placeholder = "https://example.com";
+    input.value = "";
     checkBtn.setAttribute("onclick", "checkUrl()");
     document.querySelector(".tab-button:nth-child(2)").classList.add("active");
   }
