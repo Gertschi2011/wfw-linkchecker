@@ -49,16 +49,18 @@
 }
 .tabs {
   display: flex;
+  justify-content: center;
+  gap: 10px;
   margin-bottom: 1em;
 }
 .tab-button {
-  flex: 1;
   padding: 6px 10px;
   background: #eee;
   border: 1px solid #ccc;
   cursor: pointer;
   font-size: 0.9rem;
   margin: 0 2px;
+  min-width: 140px;
 }
 .tab-button.active {
   background: #007acc;
@@ -88,6 +90,9 @@
   <p id="desc">Prüfe hier anonym & sicher, ob ein Link gefährlich oder gefälscht ist:</p>
   <input type="text" id="mainInput" placeholder="">
   <button class="check" onclick="handleCheck()" id="checkBtn">Prüfen</button>
+  <div style="text-align:center; margin-top: 1rem;">
+    <button onclick="resetForm()" style="background: #bbb; color: black;">🔄 Neue Prüfung</button>
+  </div>
   <div style="text-align:center;">
     <button onclick="startQR()">📷 QR-Code scannen</button>
   </div>
@@ -305,6 +310,13 @@ function switchTab(tab) {
 window.onload = () => {
   switchTab('email');
 };
+
+function resetForm() {
+  document.getElementById("mainInput").value = "";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("result").className = "output";
+  document.getElementById("explanation").innerHTML = "";
+}
 
 </script>
 
