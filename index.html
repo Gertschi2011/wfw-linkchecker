@@ -239,15 +239,6 @@ function checkEmail() {
     "login-service.tk", "deutschebank-verifizieren.com"
   ];
   const domain = email.split("@")[1].toLowerCase();
-
-  if (suspiciousDomains.includes(domain)) {
-    resultDiv.innerHTML = "🚫 Verdächtige E-Mail-Domain erkannt!";
-    resultDiv.className = "output danger";
-  } else {
-    resultDiv.innerHTML = "✅ Die E-Mail-Adresse sieht unverdächtig aus.";
-    resultDiv.className = "output safe";
-  }
-
   const localPart = email.split("@")[0].toLowerCase();
   const heuristics = [];
 
@@ -261,12 +252,26 @@ function checkEmail() {
     heuristics.push("⚠️ Domain enthält 'paypal', ist aber keine echte PayPal-Adresse.");
   }
 
+  if (suspiciousDomains.includes(domain)) {
+    resultDiv.innerHTML = "🚫 Verdächtige E-Mail-Domain erkannt!";
+    resultDiv.className = "output danger";
+    if (heuristics.length > 0) {
+      explanation.innerHTML = "<ul>" + heuristics.map(x => `<li>${x}</li>`).join("") + "</ul>" +
+        "<p style='margin-top: 1em; font-weight: bold;'>❗ Tipp: Wenn du eine E-Mail mit dieser Adresse bekommen hast, klicke auf keinen Link und gib keine Daten ein. Frage im Zweifel bei der offiziellen Stelle nach.</p>";
+    }
+    return;
+  }
+
   if (heuristics.length > 0) {
     resultDiv.innerHTML = "⚠️ Die Adresse sieht verdächtig aus.";
     resultDiv.className = "output warning";
     explanation.innerHTML = "<ul>" + heuristics.map(x => `<li>${x}</li>`).join("") + "</ul>" +
       "<p style='margin-top: 1em; font-weight: bold;'>❗ Tipp: Wenn du eine E-Mail mit dieser Adresse bekommen hast, klicke auf keinen Link und gib keine Daten ein. Frage im Zweifel bei der offiziellen Stelle nach.</p>";
+    return;
   }
+
+  resultDiv.innerHTML = "✅ Die E-Mail-Adresse sieht unverdächtig aus.";
+  resultDiv.className = "output safe";
 }
 
 function checkHeader() {
