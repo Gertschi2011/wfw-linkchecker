@@ -88,6 +88,7 @@
 <div class="tabs" style="justify-content: center;">
   <button class="tab-button active" onclick="switchTab('email')">📧 E-Mail prüfen</button>
   <button class="tab-button" onclick="switchTab('link')">🔗 Link prüfen</button>
+  <button class="tab-button" onclick="switchTab('header')">🕵️‍♂️ Header prüfen</button>
 </div>
 <div class="content-box">
   <h1 id="title">🔍 Link-Checker – Phishing erkennen</h1>
@@ -232,7 +233,11 @@ function checkEmail() {
   }
 
   // Beispielhafte einfache Blacklist
-  const suspiciousDomains = ["spam.com", "fakeemail.org", "banned.de"];
+  const suspiciousDomains = [
+    "spam.com", "fakeemail.org", "banned.de",
+    "paypal-konto-check.com", "secure-verifikation.xyz", "bamf-support.cc",
+    "login-service.tk", "deutschebank-verifizieren.com"
+  ];
   const domain = email.split("@")[1].toLowerCase();
 
   if (suspiciousDomains.includes(domain)) {
@@ -241,6 +246,26 @@ function checkEmail() {
   } else {
     resultDiv.innerHTML = "✅ Die E-Mail-Adresse sieht unverdächtig aus.";
     resultDiv.className = "output safe";
+  }
+
+  const localPart = email.split("@")[0].toLowerCase();
+  const heuristics = [];
+
+  if (["verifizierung", "secure", "zahlung", "support", "service", "konto", "warnung", "info"].some(term => localPart.includes(term))) {
+    heuristics.push("⚠️ Verdächtiger Begriff im E-Mail-Namen erkannt.");
+  }
+  if (domain.endsWith(".tk") || domain.endsWith(".cc") || domain.endsWith(".xyz")) {
+    heuristics.push("⚠️ Verdächtige Domainendung.");
+  }
+  if (domain.includes("paypal") && !domain.endsWith("paypal.com")) {
+    heuristics.push("⚠️ Domain enthält 'paypal', ist aber keine echte PayPal-Adresse.");
+  }
+
+  if (heuristics.length > 0) {
+    resultDiv.innerHTML = "⚠️ Die Adresse sieht verdächtig aus.";
+    resultDiv.className = "output warning";
+    explanation.innerHTML = "<ul>" + heuristics.map(x => `<li>${x}</li>`).join("") + "</ul>" +
+      "<p style='margin-top: 1em; font-weight: bold;'>❗ Tipp: Wenn du eine E-Mail mit dieser Adresse bekommen hast, klicke auf keinen Link und gib keine Daten ein. Frage im Zweifel bei der offiziellen Stelle nach.</p>";
   }
 }
 
@@ -285,7 +310,8 @@ function switchTab(tab) {
   const result = document.getElementById("result");
   const helpLinks = {
     email: "https://w-f-w.at/hilfe-bei-e-mail-betrug/",
-    link: "https://w-f-w.at/hilfe-nach-dem-klick/"
+    link: "https://w-f-w.at/hilfe-nach-dem-klick/",
+    header: "https://w-f-w.at/header-pruefen/"
   };
 
   document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
@@ -295,6 +321,12 @@ function switchTab(tab) {
     input.placeholder = "z. B. hilfe@bamf.de";
     checkBtn.setAttribute("onclick", "checkEmail()");
     document.querySelector(".tab-button:nth-child(1)").classList.add("active");
+  } else if (tab === 'header') {
+    title.innerText = "🕵️‍♂️ HTTP-Header analysieren";
+    desc.innerText = "Füge hier Header-Zeilen (z. B. aus einer E-Mail) ein:";
+    input.placeholder = "z. B. X-Forwarded-For: 127.0.0.1, 1.2.3.4";
+    checkBtn.setAttribute("onclick", "checkHeader()");
+    document.querySelector(".tab-button:nth-child(3)").classList.add("active");
   } else {
     title.innerText = texts[currentLang].title;
     desc.innerText = texts[currentLang].desc;

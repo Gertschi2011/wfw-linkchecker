@@ -152,3 +152,64 @@ async function checkEmail() {
     result.classList.add("safe");
   }
 }
+
+async function checkHeader() {
+  const input = document.getElementById("headerInput").value.trim();
+  const result = document.getElementById("headerResult");
+  result.className = "output";
+  result.innerHTML = "";
+
+  const lines = input.split("\n").map(line => line.trim()).filter(Boolean);
+  const headers = {};
+  const explanations = [];
+
+  for (const line of lines) {
+    const [key, ...rest] = line.split(":");
+    if (!key || rest.length === 0) continue;
+    headers[key.trim().toLowerCase()] = rest.join(":").trim();
+  }
+
+  const ipList = [];
+  if (headers["x-forwarded-for"]) {
+    ipList.push(...headers["x-forwarded-for"].split(",").map(ip => ip.trim()));
+  }
+  if (headers["client-ip"]) {
+    ipList.push(headers["client-ip"]);
+  }
+  if (headers["x-real-ip"]) {
+    ipList.push(headers["x-real-ip"]);
+  }
+
+  const uniqueIps = [...new Set(ipList)];
+
+  for (const ip of uniqueIps) {
+    if (ip.startsWith("127.") || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("0.")) {
+      explanations.push(`⚠️ Interne oder lokale IP erkannt: ${ip}`);
+    }
+  }
+
+  if (uniqueIps.length > 3) {
+    explanations.push(`⚠️ Mehr als 3 IPs in Kette – möglicher Spoofing-Versuch (${uniqueIps.join(", ")})`);
+  }
+
+  if (headers["user-agent"] && headers["user-agent"].toLowerCase().includes("googlebot")) {
+    const realIp = uniqueIps[0];
+    try {
+      const ipInfo = await fetch(`https://ipinfo.io/${realIp}/json`);
+      const data = await ipInfo.json();
+      if (!data.org || !data.org.toLowerCase().includes("google")) {
+        explanations.push(`⚠️ Googlebot-User-Agent erkannt, aber IP scheint nicht von Google zu stammen.`);
+      }
+    } catch (e) {
+      explanations.push("⚠️ IP-Analyse nicht möglich (Fehler bei ipinfo.io).");
+    }
+  }
+
+  if (explanations.length > 0) {
+    result.innerHTML = "<strong>⚠️ Auffällige Header:</strong><ul><li>" + explanations.join("</li><li>") + "</li></ul>";
+    result.classList.add("warning");
+  } else {
+    result.innerHTML = "✅ Keine Auffälligkeiten im Header erkannt.";
+    result.classList.add("safe");
+  }
+}
